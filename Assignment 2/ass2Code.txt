@@ -1,0 +1,116 @@
+//Animation.h
+#pragma once
+
+class Animation 
+{
+	string name;
+	forward_list<Frame> frames;
+public:
+	Animation(string s): name(s){}
+	void InsertFrame();
+	void DeleteFrames();
+	void Concatenate() // inline
+	{
+		cout << "Concatenating two Frames" << endl;
+		int index1{ -1 }, index2{ -1 }; // same as int index1 = -1, index2 = -1;
+		Animation& A{ *this };		// same as Animation& A = *this;
+		int count{ distance(frames.begin(),frames.end()) };//same as int count = distance(frames.begin(),frames.end());
+		do {
+			cout << "Please enter valid indexes of the two Frames to concatenate (0 to " << count - 1 << ")" << endl;
+			cin >> index1 >> index2;
+		} while ((index1<0 || index1>count - 1) || (index2<0 || index2>count - 1));
+
+		A += A[index1] + A[index2];
+	}
+	Frame& operator[](unsigned int);
+	void operator+=(Frame&);
+	friend ostream& operator<<(ostream& , Animation&);
+};
+
+
+// Display.h
+#pragma once
+
+class Display 
+{
+	int pixel_x;
+	int pixel_y;
+	int duration;
+	char* name;	
+public:
+	Display(int x, int y, int duration, char* name);
+	Display(const Display&);
+	~Display();
+	friend ostream& operator<<(ostream&, Display&);
+};
+
+// Frame.h
+#pragma once
+
+class Frame 
+{
+	string fileName;
+	vector<Display> displays;
+public:
+	Frame::Frame(string s, vector<Display> d) :fileName(s), displays(d){}
+	Frame operator+(Frame&);
+	friend ostream& operator<<(ostream&, Frame&);
+};
+
+// ass2.cpp
+#define _CRT_SECURE_NO_WARNINGS
+#define _CRTDBG_MAP_ALLOC	// need this to get the line identification
+//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF); // in main, after local declarations
+//NB must be in debug build
+
+#include <crtdbg.h>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <forward_list>
+using namespace std;
+
+#include "Display.h"
+#include "Frame.h"
+#include "Animation.h"
+
+bool running = true;
+
+int main(void)
+{
+	char selection;
+	bool running = true;
+	Animation A("A");
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); // in main, after local declarations
+
+
+	while (running)
+	{
+		cout<<	"MENU\n 1. Insert a Frame\n 2. Delete all the Frames\n 3. Concatenate two Frames\n 4. Run the Animation\n 5. Quit\n"<<endl;
+		cin >> selection;
+		switch (selection)
+		{
+		case '1':
+			A.InsertFrame();
+			break;
+		case '2':
+			A.DeleteFrames();
+			break;
+		case '3':
+			A.Concatenate();
+			break;
+		case '4':
+			cout << A << endl;
+			break;
+		case '5':
+			running = false;
+			break;
+		default:
+			break;
+		}
+	}
+
+	return 0;
+}
+
+
