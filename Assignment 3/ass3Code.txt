@@ -1,0 +1,136 @@
+#pragma once
+// Display.h
+
+class Display 
+{
+protected:	// accessible to derived classes
+	int pixel_x;
+	int pixel_y;
+	int duration;
+	char* name;	
+public:
+	Display(int x, int y, int duration, char* name);
+	Display(const Display&);
+	virtual ~Display()
+	{
+		if(name)
+			delete[]name;
+	}
+	virtual int BufferSize() = 0;
+	friend ostream& operator<<(ostream&, Display&);
+};
+
+#pragma once
+// SystemMemoryDisplay.h
+
+class  SystemMemoryDisplay : public Display
+{
+public:
+	SystemMemoryDisplay(int x, int y, int duration, char* name) :Display(x, y, duration, name) {};
+	SystemMemoryDisplay(const SystemMemoryDisplay& RGMD) :Display(RGMD) {}
+	int BufferSize(){return pixel_x*pixel_y * sizeof(double);}
+};
+
+#pragma once
+//GPUMemoryDisplay.h
+
+class GPUMemoryDisplay : public Display
+{
+	string shader;
+public:
+	GPUMemoryDisplay(int x, int y, int duration, char* name, string shader) :Display(x, y, duration, name), shader(shader) {};
+	GPUMemoryDisplay(const GPUMemoryDisplay& RGPUMD) :shader(RGPUMD.shader), Display(RGPUMD) {}
+	string GetShader() { return shader; }
+	int BufferSize() { return pixel_x*pixel_y * sizeof(float); }
+};
+
+// Frame.h
+#pragma once
+
+class Frame 
+{
+	string fileName;
+	vector<Display*> displays;
+public:
+	Frame(string s, vector<Display*> d) :fileName(s), displays(d){}
+	Frame(const Frame&);
+	~Frame()
+	{
+		vector<Display*>::iterator it;
+		for (it = displays.begin();it != displays.end();it++)
+			delete *it;
+	}
+	friend ostream& operator<<(ostream&, Frame&);
+};
+
+//Animation.h
+#pragma once
+
+class Animation 
+{
+	string name;
+	forward_list<Frame> frames;
+public:
+	Animation(string s): name(s){}
+	void InsertFrame();
+	void DeleteFrames();
+	friend ostream& operator<<(ostream& , Animation&);
+};
+
+// ass3.cpp
+#define _CRT_SECURE_NO_WARNINGS
+#define _CRTDBG_MAP_ALLOC	// need this to get the line identification
+//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF); // in main, after local declarations
+//NB must be in debug build
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <forward_list>
+using namespace std;
+
+#include "Display.h"
+#include "SystemMemoryDisplay.h"
+#include "GPUMemoryDisplay.h"
+#include "Frame.h"
+#include "Animation.h"
+
+bool running = true;
+
+int main(void)
+{
+	char selection;
+	bool running = true;
+	Animation A("A");
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF); // in main, after local declarations
+
+	while (running)
+	{
+		cout<<	"MENU\n 1. Insert a Frame\n 2. Delete all the Frames\n 3. Run the Animation\n 4. Quit\n"<<endl;
+		fflush(stdin);
+		cin>>selection;
+
+		switch (selection)
+		{
+		case '1':
+			A.InsertFrame();
+			break;
+		case '2':
+			A.DeleteFrames();
+			break;
+		case '3':
+			cout << A << endl;
+			break;
+		case '4':
+			running = false;
+			break;
+		default:
+			break;
+		}
+	}
+
+	return 0;
+}
+
+
